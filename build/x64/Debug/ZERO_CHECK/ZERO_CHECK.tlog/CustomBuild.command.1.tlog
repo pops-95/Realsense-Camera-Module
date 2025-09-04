@@ -1,0 +1,10 @@
+^F:\LAYEK\OFFICE WORK\PROJECTS\SAFFRON\CODE\LAYEK\REALSENSE\POC_CONTROL\POC\BUILD\CMAKEFILES\39BCF5DF81ECB14E0F943D0FEA67B401\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SF:/Layek/Office Work/Projects/Saffron/Code/Layek/Realsense/POC_CONTROL/poc" "-BF:/Layek/Office Work/Projects/Saffron/Code/Layek/Realsense/POC_CONTROL/poc/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "F:/Layek/Office Work/Projects/Saffron/Code/Layek/Realsense/POC_CONTROL/poc/build/RealSenseDemo.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

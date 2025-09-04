@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\Layek\Office Work\Projects\Saffron\Code\Layek\Realsense\POC_CONTROL\poc\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Layek\Office Work\Projects\Saffron\Code\Layek\Realsense\POC_CONTROL\poc\include\Utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Layek\Office Work\Projects\Saffron\Code\Layek\Realsense\POC_CONTROL\poc\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{85E65515-4905-323D-9C9C-2E6819008408}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
