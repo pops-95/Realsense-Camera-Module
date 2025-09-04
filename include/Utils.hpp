@@ -14,12 +14,20 @@ typedef struct{
     int color_fps;
 }color_frame_info;
 
+typedef struct {
+    float fx, fy;      // Focal lengths
+    float ppx, ppy;    // Principal points
+    float coeffs[5];   // Distortion coefficients
+    int width, height; // Image dimensions
+} intrinsics_info;
+
 
 class Camera{
     public:
         Camera(const std::string& serial, const std::string& name);
         ~Camera();
         Camera (color_frame_info color_info, depth_frame_info depth_info);
+
         void enable_streams();
         void start_camera();
         void get_serial(std::string& serial_out) { serial_out = serial; }
@@ -27,12 +35,20 @@ class Camera{
         void change_color_frame(color_frame_info& color_info);
         
         rs2::frameset aligned_frames(rs2::frameset frames);
+        rs2::frameset get_frames();
 
         void set_exposure(int value, bool auto_exposure);
-        cv::Mat Camera::get_rgb_image();
-        cv::Mat Camera::get_colorized_depth_image();
+
+        cv::Mat Camera::get_rgb_image(rs2::frameset frames);
+        cv::Mat Camera::get_colorized_depth_image(rs2::depth_frame depth_frame);
+        cv::Point3f pixel_to_global(int u, int v, float depth, const intrinsics_info& intr);
+        cv::Mat threshold_depth_frame(const rs2::depth_frame& depth_frame, uint16_t threshold);
+
+
+
         void get_color_frame_info(color_frame_info& color_info_out) { color_info_out = color_info; }
         void get_depth_frame_info(depth_frame_info& depth_info_out) { depth_info_out = depth_info; }
+        intrinsics_info get_color_intrinsics();
         
     private:
         rs2::pipeline pipe;
@@ -43,7 +59,7 @@ class Camera{
         std::string serial;
         std::string name;
         // rs2::depth_frame depth_frame;
-        rs2::frameset get_frames();
+        
 
         
 };

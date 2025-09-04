@@ -96,10 +96,10 @@ void Camera::set_exposure(int value, bool auto_exposure)
     }
 }
 
-cv::Mat Camera::get_rgb_image()
+cv::Mat Camera::get_rgb_image(rs2::frameset frames)
 {
-    rs2::frameset frames = get_frames();
-    rs2::frameset aligned = aligned_frames(frames);
+    // rs2::frameset frames = get_frames();
+    // rs2::frameset aligned = aligned_frames(frames);
     rs2::video_frame color_frame = frames.get_color_frame();
 
     if (!color_frame)
@@ -123,12 +123,8 @@ cv::Mat Camera::get_rgb_image()
     return image;
 }
 
-cv::Mat Camera::get_colorized_depth_image()
+cv::Mat Camera::get_colorized_depth_image(rs2::depth_frame depth_frame)
 {
-    rs2::frameset frames = get_frames();
-    rs2::frameset aligned = aligned_frames(frames);
-    rs2::depth_frame depth_frame = aligned.get_depth_frame();
-
     if (!depth_frame)
     {
         std::cerr << "No depth frame available!" << std::endl;
@@ -139,16 +135,77 @@ cv::Mat Camera::get_colorized_depth_image()
     rs2::colorizer color_map;
     rs2::frame colorized = color_map.process(depth_frame);
 
-    // Convert colorized frame to OpenCV Mat
+    // Cast to rs2::video_frame for get_stride_in_bytes()
+    rs2::video_frame colorized_video = colorized.as<rs2::video_frame>();
+
     cv::Mat colorized_image(
         depth_info.depth_height,
         depth_info.depth_width,
         CV_8UC3,
-        (void *)colorized.get_data(),
-        colorized.get_stride_in_bytes());
+        (void *)colorized_video.get_data(),
+        colorized_video.get_stride_in_bytes());
 
     return colorized_image;
 }
+
+cv::Mat Camera::threshold_depth_frame(const rs2::depth_frame &depth_frame, uint16_t threshold)
+{
+     int width = depth_frame.get_width();
+    int height = depth_frame.get_height();
+
+    // Create a CV_16U Mat from depth frame data
+    cv::Mat depth_mat(height, width, CV_16U, (void*)depth_frame.get_data(), depth_frame.get_stride_in_bytes());
+
+    // Clone to avoid modifying the original frame
+    cv::Mat thresholded = depth_mat.clone();
+
+    for (int y = 0; y < thresholded.rows; ++y)
+    {
+        uint16_t* row_ptr = thresholded.ptr<uint16_t>(y);
+        for (int x = 0; x < thresholded.cols; ++x)
+        {
+            if (row_ptr[x] > threshold)
+                row_ptr[x] = 0;
+        }
+    }
+
+    return thresholded;
+}
+
+intrinsics_info Camera::get_color_intrinsics()
+{
+    rs2::pipeline_profile profile = pipe.get_active_profile();
+    rs2::video_stream_profile color_stream = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
+    rs2_intrinsics intr = color_stream.get_intrinsics();
+
+    intrinsics_info info;
+    info.fx = intr.fx;
+    info.fy = intr.fy;
+    info.ppx = intr.ppx;
+    info.ppy = intr.ppy;
+    info.width = intr.width;
+    info.height = intr.height;
+    for (int i = 0; i < 5; ++i)
+        info.coeffs[i] = intr.coeffs[i];
+    return info;
+}
+
+cv::Point3f Camera::pixel_to_global(int u, int v, float depth, const intrinsics_info& intr)
+{
+    // Convert pixel (u,v) and depth to camera coordinates (X,Y,Z)
+    float X = (u - intr.ppx) / intr.fx * depth;
+    float Y = (v - intr.ppy) / intr.fy * depth;
+    float Z = depth;
+    return cv::Point3f(X, Y, Z);
+}
+
+
+
+
+
+
+
+
 
 
 
