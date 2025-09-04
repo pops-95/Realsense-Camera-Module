@@ -1,5 +1,6 @@
 #include "Utils.hpp"
 
+
 Camera::Camera(const std::string &serial, const std::string &name)
 {
     // Default Constructor
@@ -60,9 +61,8 @@ rs2::frameset Camera::get_frames()
     return rs2::frameset();
 }
 
-rs2::frameset Camera::aligned_frames()
+rs2::frameset Camera::aligned_frames(rs2::frameset frames)
 {
-    rs2::frameset frames = get_frames();
     if (frames.size() == 0)
     {
         std::cout << "No frames " << std::endl; // Return empty frameset if no frames are available
@@ -95,5 +95,66 @@ void Camera::set_exposure(int value, bool auto_exposure)
         }
     }
 }
+
+cv::Mat Camera::get_rgb_image()
+{
+    rs2::frameset frames = get_frames();
+    rs2::frameset aligned = aligned_frames(frames);
+    rs2::video_frame color_frame = frames.get_color_frame();
+
+    if (!color_frame)
+    {
+        std::cerr << "No color frame available!" << std::endl;
+        return cv::Mat();
+    }
+
+    // Create OpenCV matrix from color frame data
+    cv::Mat image(
+        color_info.color_height,
+        color_info.color_width,
+        CV_8UC3,
+        (void *)color_frame.get_data(),
+        color_frame.get_stride_in_bytes());
+
+    // Convert from BGR to RGB if needed
+   // cv::Mat rgb_image;
+    // cv::cvtColor(image, rgb_image, cv::COLOR_BGR2RGB);
+
+    return image;
+}
+
+cv::Mat Camera::get_colorized_depth_image()
+{
+    rs2::frameset frames = get_frames();
+    rs2::frameset aligned = aligned_frames(frames);
+    rs2::depth_frame depth_frame = aligned.get_depth_frame();
+
+    if (!depth_frame)
+    {
+        std::cerr << "No depth frame available!" << std::endl;
+        return cv::Mat();
+    }
+
+    // Colorize the depth frame using RealSense colorizer
+    rs2::colorizer color_map;
+    rs2::frame colorized = color_map.process(depth_frame);
+
+    // Convert colorized frame to OpenCV Mat
+    cv::Mat colorized_image(
+        depth_info.depth_height,
+        depth_info.depth_width,
+        CV_8UC3,
+        (void *)colorized.get_data(),
+        colorized.get_stride_in_bytes());
+
+    return colorized_image;
+}
+
+
+
+
+
+
+
 
 

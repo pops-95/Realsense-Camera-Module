@@ -1,5 +1,6 @@
 #include <librealsense2/rs.hpp>     // Include RealSense Cross Platform API
 #include <iostream>
+#include <opencv2/opencv.hpp>
 
 typedef struct{
     int depth_width;
@@ -25,10 +26,11 @@ class Camera{
         void change_depth_frame(depth_frame_info& depth_info); 
         void change_color_frame(color_frame_info& color_info);
         
-        rs2::frameset aligned_frames();
+        rs2::frameset aligned_frames(rs2::frameset frames);
 
         void set_exposure(int value, bool auto_exposure);
-
+        cv::Mat Camera::get_rgb_image();
+        cv::Mat Camera::get_colorized_depth_image();
         void get_color_frame_info(color_frame_info& color_info_out) { color_info_out = color_info; }
         void get_depth_frame_info(depth_frame_info& depth_info_out) { depth_info_out = depth_info; }
         
@@ -40,7 +42,7 @@ class Camera{
         depth_frame_info depth_info;
         std::string serial;
         std::string name;
-        rs2::depth_frame depth_frame;
+        // rs2::depth_frame depth_frame;
         rs2::frameset get_frames();
 
         
