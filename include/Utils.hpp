@@ -43,7 +43,7 @@ class Camera{
         cv::Mat Camera::get_colorized_depth_image(rs2::depth_frame depth_frame);
         cv::Point3f pixel_to_global(int u, int v, float depth, const intrinsics_info& intr);
         cv::Mat threshold_depth_frame(const rs2::depth_frame& depth_frame, uint16_t threshold);
-
+        rs2::depth_frame Camera::process_depth_filters(const rs2::depth_frame& input_depth_frame);
 
 
         void get_color_frame_info(color_frame_info& color_info_out) { color_info_out = color_info; }
@@ -58,6 +58,7 @@ class Camera{
         depth_frame_info depth_info;
         std::string serial;
         std::string name;
+        rs2::depth_frame Camera::disparity_to_depth(const rs2::depth_frame& input_disparity_frame);
         // rs2::depth_frame depth_frame;
         
 

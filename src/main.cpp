@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     }
 
     // Show color and thresholded depth images from the first camera
-    uint16_t threshold_value = 1000; // Example: 2000 units (usually mm, i.e. 2 meters)
+    uint16_t threshold_value = 2000; // Example: 2000 units (usually mm, i.e. 2 meters)
 
     while (true) {
         // Get frames from camera
@@ -42,6 +42,10 @@ int main(int argc, char *argv[])
 
         // Get depth frame
         rs2::depth_frame depth_frame = aligned.get_depth_frame();
+
+        
+        if (depth_frame)
+            depth_frame = cameras[0].process_depth_filters(depth_frame);
 
         cv::Mat depth_thresh_img;
         if (depth_frame)
@@ -64,3 +68,8 @@ int main(int argc, char *argv[])
     cv::destroyAllWindows();
     return 0;
 }
+
+
+
+
+

@@ -150,7 +150,7 @@ cv::Mat Camera::get_colorized_depth_image(rs2::depth_frame depth_frame)
 
 cv::Mat Camera::threshold_depth_frame(const rs2::depth_frame &depth_frame, uint16_t threshold)
 {
-     int width = depth_frame.get_width();
+    int width = depth_frame.get_width();
     int height = depth_frame.get_height();
 
     // Create a CV_16U Mat from depth frame data
@@ -172,6 +172,7 @@ cv::Mat Camera::threshold_depth_frame(const rs2::depth_frame &depth_frame, uint1
     return thresholded;
 }
 
+
 intrinsics_info Camera::get_color_intrinsics()
 {
     rs2::pipeline_profile profile = pipe.get_active_profile();
@@ -190,6 +191,7 @@ intrinsics_info Camera::get_color_intrinsics()
     return info;
 }
 
+
 cv::Point3f Camera::pixel_to_global(int u, int v, float depth, const intrinsics_info& intr)
 {
     // Convert pixel (u,v) and depth to camera coordinates (X,Y,Z)
@@ -198,6 +200,42 @@ cv::Point3f Camera::pixel_to_global(int u, int v, float depth, const intrinsics_
     float Z = depth;
     return cv::Point3f(X, Y, Z);
 }
+
+rs2::depth_frame Camera::disparity_to_depth(const rs2::depth_frame& input_disparity_frame)
+{
+    rs2::disparity_transform disp_to_depth(false); // false = disparity to depth
+    rs2::frame depth = disp_to_depth.process(input_disparity_frame);
+    return depth.as<rs2::depth_frame>();
+}
+
+
+rs2::depth_frame Camera::process_depth_filters(const rs2::depth_frame& input_depth_frame)
+{
+    // Create filter objects
+    rs2::decimation_filter dec_filter;
+    dec_filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, 1); // Keep original size
+
+    rs2::spatial_filter spatial_filter;
+    rs2::temporal_filter temporal_filter;
+
+    // Apply decimation filter
+    rs2::frame decimated = dec_filter.process(input_depth_frame);
+
+    // Apply spatial filter
+    rs2::frame spatial = spatial_filter.process(decimated);
+
+    // Apply temporal filter
+    rs2::frame temporaled = temporal_filter.process(spatial);
+
+    // Return the processed frame as a depth_frame
+    return temporaled.as<rs2::depth_frame>();
+}
+
+
+
+
+
+
 
 
 
