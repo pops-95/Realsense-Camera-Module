@@ -6,26 +6,15 @@ Camera::Camera(const std::string &serial, const std::string &name)
     // Default Constructor
     this->serial = serial;
     this->name = name;
+    
 }
 
-void Camera::enable_streams()
-{
-    // Enable the streams
-    cfg.enable_stream(RS2_STREAM_DEPTH, depth_info.depth_width, depth_info.depth_height, RS2_FORMAT_Z16, depth_info.depth_fps);
-    cfg.enable_stream(RS2_STREAM_COLOR, color_info.color_width, color_info.color_height, RS2_FORMAT_BGR8, color_info.color_fps);
-}
 
-void Camera::start_camera()
-{
-    // Start the camera
-    pipe.start(cfg);
-}
-
-Camera::~Camera()
-{
-    // Destructor
-    pipe.stop();
-}
+// Camera::~Camera()
+// {
+//     // Destructor
+//     pipe.stop();
+// }
 
 Camera::Camera(color_frame_info color_info, depth_frame_info depth_info)
 {
@@ -43,23 +32,23 @@ void Camera::change_color_frame(color_frame_info &color_info)
     this->color_info = color_info;
 }
 
-rs2::frameset Camera::get_frames()
-{
-    try
-    {
-        return pipe.wait_for_frames();
-    }
-    catch (const rs2::error &e)
-    {
-        std::cerr << "RealSense error calling wait_for_frames(): " << e.what() << std::endl;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Standard exception calling wait_for_frames(): " << e.what() << std::endl;
-    }
-    // Return an empty frameset if an error occurs
-    return rs2::frameset();
-}
+// rs2::frameset Camera::get_frames(rs2::pipeline &pipe)
+// {
+//     try
+//     {
+//         return pipe.wait_for_frames();
+//     }
+//     catch (const rs2::error &e)
+//     {
+//         std::cerr << "RealSense error calling wait_for_frames(): " << e.what() <<"From camera " << serial << std::endl;
+//     }
+//     catch (const std::exception &e)
+//     {
+//         std::cerr << "Standard exception calling wait_for_frames(): " << e.what() << std::endl;
+//     }
+//     // Return an empty frameset if an error occurs
+//     return rs2::frameset();
+// }
 
 rs2::frameset Camera::aligned_frames(rs2::frameset frames)
 {
@@ -173,7 +162,7 @@ cv::Mat Camera::threshold_depth_frame(const rs2::depth_frame &depth_frame, uint1
 }
 
 
-intrinsics_info Camera::get_color_intrinsics()
+intrinsics_info Camera::get_color_intrinsics(rs2::pipeline &pipe)
 {
     rs2::pipeline_profile profile = pipe.get_active_profile();
     rs2::video_stream_profile color_stream = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
@@ -231,6 +220,50 @@ rs2::depth_frame Camera::process_depth_filters(const rs2::depth_frame& input_dep
     return temporaled.as<rs2::depth_frame>();
 }
 
+
+
+void Camera::camera_operation(rs2::frameset &frames,camera_frames &frames_out) {
+    // rs2::frameset frames = get_frames(pipe);
+    // if (frames.size() == 0) {
+    //     std::cout << "No frames received from camera." << std::endl;
+    //     return;
+    // }
+    rs2::frameset aligned = aligned_frames(frames);
+
+    cv::Mat color_img = get_rgb_image(aligned);
+    if (color_img.empty()) {
+        std::cout << "Color image is empty." << std::endl;
+    }
+
+    rs2::depth_frame depth_frame = aligned.get_depth_frame();
+    if (!depth_frame) {
+        std::cout << "No depth frame available." << std::endl;
+    }
+
+    if (depth_frame)
+        depth_frame = process_depth_filters(depth_frame);
+
+    cv::Mat depth_thresh_img;
+    if (depth_frame)
+        depth_thresh_img = threshold_depth_frame(depth_frame, threshold_value);
+
+    cv::Mat depth_display;
+    if (!depth_thresh_img.empty())
+        cv::normalize(depth_thresh_img, depth_display, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+    // std::cout << "Color: " << color_img.cols << "x" << color_img.rows
+    //           << ", Depth: " << depth_display.cols << "x" << depth_display.rows << std::endl;
+
+    if (!color_img.empty())
+        frames_out.color_image = color_img;
+    else
+        frames_out.color_image.release();
+
+    if (!depth_display.empty())
+        frames_out.depth_image = depth_display;
+    else
+        frames_out.depth_image.release();
+}
 
 
 

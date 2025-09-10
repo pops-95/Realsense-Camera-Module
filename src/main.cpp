@@ -1,74 +1,94 @@
+// License: Apache 2.0. See LICENSE file in root directory.
+// Copyright(c) 2015-2017 Intel Corporation. All Rights Reserved.
+
+#include <librealsense2/rs.hpp>     // Include RealSense Cross Platform API
 #include <iostream>
-#include <opencv2/opencv.hpp>
-#include "Utils.hpp"
+#include <Utils.hpp>
+// #include "example.hpp"              // Include short list of convenience functions for rendering
 
-int main(int argc, char *argv[])
+#include <map>
+#include <vector>
+
+int main(int argc, char * argv[]) try
 {
-    rs2::context ctx;
-    auto devices = ctx.query_devices();
-    std::vector<Camera> cameras;
+    // Create a simple OpenGL window for rendering:
+    // window app(1280, 960, "CPP Multi-Camera Example");
 
-    // Set desired resolution and fps
-    color_frame_info color_info = {1280, 720, 30};
-    depth_frame_info depth_info = {1280, 720, 30};
+    rs2::context                          ctx;        // Create librealsense context for managing devices
 
-    for (size_t i = 0; i < devices.size(); ++i) {
-        rs2::device dev = devices[i];
-        std::string serial = dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER);
-        std::string name = "Camera_" + serial;
-        cameras.emplace_back(serial, name);
-        cameras.back().change_color_frame(color_info);
-        cameras.back().change_depth_frame(depth_info);
-        cameras.back().enable_streams();
-        cameras.back().start_camera();
-        std::cout << "Created camera object for device: " << name << std::endl;
+    std::map<std::string, rs2::colorizer> colorizers; // Declare map from device serial number to colorizer (utility class to convert depth data RGB colorspace)
+
+    std::vector<rs2::pipeline>            pipelines;
+
+    // Capture serial numbers before opening streaming
+    std::vector<std::string>              serials;
+    // std::vector<Camera>                 cameras;
+    std::vector<camera_frames>            frames_vec;
+
+    Camera cam;
+    for (auto&& dev : ctx.query_devices())
+        serials.push_back(dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER));
+
+    // Start a streaming pipe per each connected device
+    for (auto&& serial : serials)
+    {
+        rs2::pipeline pipe(ctx);
+        rs2::config cfg;
+        cfg.enable_device(serial);
+        pipe.start(cfg);
+        pipelines.emplace_back(pipe);
+        // Map from each device's serial number to a different colorizer
+        //colorizers[serial] = rs2::colorizer();
+       
+        frames_vec.emplace_back();
+        std::cout << "Started streaming from device " << serial << std::endl;
     }
 
-    if (cameras.empty()) {
-        std::cerr << "No RealSense cameras detected." << std::endl;
-        return -1;
+    // We'll keep track of the last frame of each stream available to make the presentation persistent
+    std::map<int, rs2::frame> render_frames;
+
+    // Main app loop
+    while (true)
+    {
+        // Collect the new frames from all the connected devices
+        std::vector<rs2::frame> new_frames;
+        for (auto &&pipe : pipelines)
+        {
+            rs2::frameset fs;
+            if (pipe.poll_for_frames(&fs))
+            {
+                for (const rs2::frame& f : fs)
+                    new_frames.emplace_back(f);
+
+            }
+        }
+
+        // Convert the newly-arrived frames to render-friendly format
+        for (const auto& frame : new_frames)
+        {
+            // Get the serial number of the current frame's device
+            auto serial = rs2::sensor_from_frame(frame)->get_info(RS2_CAMERA_INFO_SERIAL_NUMBER);
+            std::cout << "Frame from device " << serial << std::endl;
+            // Apply the colorizer of the matching device and store the colorized frame
+            render_frames[frame.get_profile().unique_id()] = colorizers[serial].process(frame);
+        }
+
+        // Present all the collected frames with openGl mosaic
+        // app.show(render_frames);
     }
 
-    // Show color and thresholded depth images from the first camera
-    uint16_t threshold_value = 2000; // Example: 2000 units (usually mm, i.e. 2 meters)
-
-    while (true) {
-        // Get frames from camera
-        rs2::frameset frames = cameras[0].get_frames();
-        rs2::frameset aligned = cameras[0].aligned_frames(frames);
-
-        // Get color image
-        cv::Mat color_img = cameras[0].get_rgb_image(aligned);
-
-        // Get depth frame
-        rs2::depth_frame depth_frame = aligned.get_depth_frame();
-
-        
-        if (depth_frame)
-            depth_frame = cameras[0].process_depth_filters(depth_frame);
-
-        cv::Mat depth_thresh_img;
-        if (depth_frame)
-            depth_thresh_img = cameras[0].threshold_depth_frame(depth_frame, threshold_value);
-
-        // Optionally normalize for display
-        cv::Mat depth_display;
-        if (!depth_thresh_img.empty())
-            cv::normalize(depth_thresh_img, depth_display, 0, 255, cv::NORM_MINMAX, CV_8U);
-
-        if (!color_img.empty())
-            cv::imshow("Color Image", color_img);
-        if (!depth_display.empty())
-            cv::imshow("Depth Image (Thresholded)", depth_display);
-
-        if (cv::waitKey(1) == 27) // ESC key
-            break;
-    }
-
-    cv::destroyAllWindows();
-    return 0;
+    return EXIT_SUCCESS;
 }
-
+catch (const rs2::error & e)
+{
+    std::cerr << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what() << std::endl;
+    return EXIT_FAILURE;
+}
+catch (const std::exception & e)
+{
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+}
 
 
 
