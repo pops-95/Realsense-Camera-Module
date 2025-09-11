@@ -26,8 +26,8 @@ int main(int argc, char * argv[])
     std::vector<camera_frames>            frames_vec;
 
     // Example: let’s allow user choice
-    color_frame_info cinfo = {640, 480, 30};  // default
-    depth_frame_info dinfo = {640, 480, 30};  // default
+    color_frame_info cinfo = {1280,720,30};  // default
+    depth_frame_info dinfo = {1280,720,30};  // default
     // Camera cam;
     for (auto&& dev : ctx.query_devices())
         serials.push_back(dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER));
