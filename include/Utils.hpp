@@ -37,18 +37,32 @@ struct camera_frames {
 
 class Camera{
     public:
-        Camera(const std::string& serial, const std::string& name);
+        Camera(const std::string& serial, const std::string& name,
+       color_frame_info color_info, depth_frame_info depth_info,rs2::context& ctx,
+           rs2::config cfg);
         // ~Camera();
         Camera (color_frame_info color_info, depth_frame_info depth_info);
+        Camera(const std::string& serial) {this->serial = serial; };
+        Camera() = default;
 
         // void enable_streams();
         // void start_camera();
         void get_serial(std::string& serial_out) { serial_out = serial; }
         void change_depth_frame(depth_frame_info& depth_info); 
         void change_color_frame(color_frame_info& color_info);
-        
+        // void start_pipeline(const rs2::config& cfg, rs2::context& ctx) {
+        //     pipe = rs2::pipeline(ctx);
+        //     try {
+        //             pipe.start(cfg);
+        //             std::cout << "Pipeline started for serial " << serial << std::endl;
+        //         } catch (const rs2::error &e) {
+        //             std::cerr << "Failed to start pipeline for " << serial
+        //                     << " : " << e.what() << std::endl;
+                    
+        //         }
+        // }
         rs2::frameset aligned_frames(rs2::frameset frames);
-        // rs2::frameset get_frames(rs2::pipeline& pipe);
+        rs2::frameset get_frames();
 
         void set_exposure(int value, bool auto_exposure);
 
@@ -58,12 +72,15 @@ class Camera{
         cv::Mat threshold_depth_frame(const rs2::depth_frame& depth_frame, uint16_t threshold);
 
         rs2::depth_frame Camera::process_depth_filters(const rs2::depth_frame& input_depth_frame);
-        void Camera::camera_operation(rs2::frameset &frames, camera_frames &frames_out);
-        // void set_pipeline(rs2::pipeline& pipeline) { this->pipe = pipeline; };
+        void Camera::camera_operation(rs2::frameset &frames,Camera &camera, camera_frames &frames_out);
+        void set_pipeline(rs2::pipeline& pipeline) { this->pipe = pipeline; };
         void get_color_frame_info(color_frame_info& color_info_out) { color_info_out = color_info; }
         void get_depth_frame_info(depth_frame_info& depth_info_out) { depth_info_out = depth_info; }
         intrinsics_info get_color_intrinsics(rs2::pipeline &pipe);
-        
+        std::string serial;
+        bool Camera::verify_pipeline_serial();
+
+
     private:
         rs2::pipeline pipe;
         // Show color and thresholded depth images from the first camera
@@ -72,7 +89,7 @@ class Camera{
         // rs2::context ctx;
         color_frame_info color_info;
         depth_frame_info depth_info;
-        std::string serial;
+        
         std::string name;
         rs2::depth_frame Camera::disparity_to_depth(const rs2::depth_frame& input_disparity_frame);
         // rs2::depth_frame depth_frame;
