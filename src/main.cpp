@@ -52,26 +52,7 @@ int main(int argc, char * argv[])
 
     }
 
-    // for (size_t i = 0; i < cameras.size(); i++) {
-    // if (!cameras[i].verify_pipeline_serial()) {
-    //     std::cerr << "Camera " << i << " pipeline association is invalid!" << std::endl;
-    // }
-    //     std::cerr << "Camera " <<cameras[i].serial << std::endl;
-    // }
-
-    // // For each pipeline, get the associated device and print its serial
-    // for (auto &pipe : pipelines){
-    //      try {
-    //     std::string p_serial = pipe.get_active_profile()
-    //                                .get_device()
-    //                                .get_info(RS2_CAMERA_INFO_SERIAL_NUMBER);
-    //     std::cout << "Pipeline associated with device " << p_serial << std::endl;
-    // } catch (const rs2::error& e) {
-    //     std::cerr << "Failed to get active profile: " << e.what() << std::endl;
-    // }
-    //   }
- 
-
+   
     // // Main app loop
     while (true)
     {

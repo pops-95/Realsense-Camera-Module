@@ -260,8 +260,11 @@ void Camera::camera_operation(rs2::frameset &frames, Camera &camera,camera_frame
     // std::cout << "Color: " << color_img.cols << "x" << color_img.rows
     //           << ", Depth: " << depth_display.cols << "x" << depth_display.rows << std::endl;
 
-    if (!color_img.empty())
+    if (!color_img.empty()){
+        cv::cvtColor(color_img, color_img, cv::COLOR_RGB2BGR);
         frames_out.color_image = color_img;
+    }
+        
     else
         frames_out.color_image.release();
 
