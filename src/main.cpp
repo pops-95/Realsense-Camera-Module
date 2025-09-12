@@ -28,12 +28,12 @@ static void onMouse(int event, int x, int y, int flags, void* userdata)
        MouseData* data = reinterpret_cast<MouseData*>(userdata);
         if(data->id==1){
             // std::cout << "Left button of mouse is clicked - position (" << x << ", " << y << ") in window " << data->windowName << std::endl;
-            std::cout << "Depth at this pixel: " << data->opened_cam->depth_frame->get_distance(x,y)   <<std::endl;
+            std::cout<< std::fixed << std::setprecision(2)  << "Depth at this pixel: " << data->opened_cam->depth_frame->get_distance(x,y)*1000   <<std::endl;
 
         }   
         if(data->id==2){
             // std::cout << "Left button of mouse is clicked - position (" << x << ", " << y << ") in window " << data->windowName << std::endl;
-            std::cout << "Depth at this pixel: " << data->opened_cam->depth_frame->get_distance(x,y)   <<std::endl;
+            std::cout<< std::fixed << std::setprecision(2)  << "Depth at this pixel: " << data->opened_cam->depth_frame->get_distance(x,y)*1000   <<std::endl;
         }
     }
 }
@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
     while (true)
     {
       
-        for (int i=0;i<2;i++){
+        for (int i=0;i<cameras.size();i++){
              rs2::frameset fs=cameras[i].get_frames(); 
               if (fs.size() > 0){
                     // std::cout<< "Got frames from camera " << cameras[i].serial << std::endl;

@@ -93,6 +93,7 @@ class Camera{
         
         std::string name;
         rs2::depth_frame Camera::disparity_to_depth(const rs2::depth_frame& input_disparity_frame);
+        rs2::depth_frame Camera::dpeth_to_disparity(const rs2::depth_frame& input_disparity_frame);
         // rs2::depth_frame depth_frame;
         
 

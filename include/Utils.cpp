@@ -200,7 +200,14 @@ rs2::depth_frame Camera::disparity_to_depth(const rs2::depth_frame& input_dispar
 {
     rs2::disparity_transform disp_to_depth(false); // false = disparity to depth
     rs2::frame depth = disp_to_depth.process(input_disparity_frame);
-    return depth.as<rs2::depth_frame>();
+    return depth;
+}
+
+rs2::depth_frame Camera::dpeth_to_disparity(const rs2::depth_frame& input_disparity_frame)
+{
+    rs2::disparity_transform disp_to_depth(true); // false = disparity to depth
+    rs2::frame depth = disp_to_depth.process(input_disparity_frame);
+    return depth;
 }
 
 
@@ -216,14 +223,18 @@ rs2::depth_frame Camera::process_depth_filters(const rs2::depth_frame& input_dep
     // Apply decimation filter
     rs2::frame decimated = dec_filter.process(input_depth_frame);
 
+    rs2::frame desp_frame= dpeth_to_disparity(decimated);
+
     // Apply spatial filter
-    rs2::frame spatial = spatial_filter.process(decimated);
+    rs2::frame spatial = spatial_filter.process(desp_frame);
 
     // Apply temporal filter
     rs2::frame temporaled = temporal_filter.process(spatial);
 
+    rs2::frame des_depth_frame= disparity_to_depth(temporaled);
+
     // Return the processed frame as a depth_frame
-    return temporaled.as<rs2::depth_frame>();
+    return des_depth_frame.as<rs2::depth_frame>();
 }
 
 
