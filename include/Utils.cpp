@@ -248,6 +248,8 @@ void Camera::camera_operation(rs2::frameset &frames, Camera &camera,camera_frame
 
     if (depth_frame)
         depth_frame =camera.process_depth_filters(depth_frame);
+    
+    camera.depth_frame = depth_frame;
 
     cv::Mat depth_thresh_img;
     if (depth_frame)

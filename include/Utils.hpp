@@ -1,6 +1,7 @@
 #include <librealsense2/rs.hpp>     // Include RealSense Cross Platform API
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <optional>
 
 typedef struct{
     int depth_width;
@@ -44,7 +45,7 @@ class Camera{
         Camera (color_frame_info color_info, depth_frame_info depth_info);
         Camera(const std::string& serial) {this->serial = serial; };
         Camera() = default;
-
+        std::optional<rs2::depth_frame> depth_frame;
         // void enable_streams();
         // void start_camera();
         void get_serial(std::string& serial_out) { serial_out = serial; }
