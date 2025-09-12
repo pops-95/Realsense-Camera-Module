@@ -39,8 +39,8 @@ int main(int argc, char * argv[])
         rs2::config cfg;
       
         cfg.enable_device(serial);
-        // cfg.enable_stream(RS2_STREAM_COLOR, cinfo.color_width, cinfo.color_height, RS2_FORMAT_BGR8, cinfo.color_fps);
-        // cfg.enable_stream(RS2_STREAM_DEPTH, dinfo.depth_width, dinfo.depth_height, RS2_FORMAT_Z16, dinfo.depth_fps);
+        cfg.enable_stream(RS2_STREAM_COLOR, cinfo.color_width, cinfo.color_height, RS2_FORMAT_BGR8, cinfo.color_fps);
+        cfg.enable_stream(RS2_STREAM_DEPTH, dinfo.depth_width, dinfo.depth_height, RS2_FORMAT_Z16, dinfo.depth_fps);
         cameras.emplace_back(serial,"Camera_"+serial,cinfo,dinfo,ctx,cfg);
         
        
@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
         // serials.push_back(serial);
         std::cout << "Started streaming from device " << serial << std::endl;
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(350));
 
     }
 
@@ -63,6 +63,7 @@ int main(int argc, char * argv[])
                     std::cout<< "Got frames from camera " << cameras[i].serial << std::endl;
                     cameras[i].camera_operation(fs,cameras[i], frames_vec[i]);
               }
+              std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
         // Show both RGB images in separate windows
